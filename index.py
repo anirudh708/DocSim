@@ -10,12 +10,13 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 import itertools
 import json
+from collections import Counter
 
 from flask import Flask,request
 from flask import render_template
 app = Flask(__name__)
 
-def review_to_wordlist( review, remove_stopwords=False ):
+def document_to_wordlist( review, remove_stopwords=False ):
 	review_text = BeautifulSoup(review).get_text()
 	review_text = re.sub("[^a-zA-Z]"," ", review_text)
 	words = review_text.lower().split()
@@ -30,7 +31,7 @@ def document_to_sentences( review, tokenizer, remove_stopwords=False ):
 	sentences = []
 	for raw_sentence in raw_sentences:
 	    if len(raw_sentence) > 0:
-	        sentences.append(review_to_wordlist( raw_sentence, \
+	        sentences.append(document_to_wordlist( raw_sentence, \
 	          remove_stopwords ))
 	return sentences,raw_sentences
 
@@ -66,8 +67,10 @@ def visual():
 	    temp["value"] = matrix[i][j]
 	    force["links"].append(temp)
 	graph = json.dumps(force)
-	print type(graph)
-	print raw_sentences
+	wordlist = []
+	for each in raw_sentences:
+		wordlist+=document_to_wordlist(each)
+	print Counter(wordlist)
 	return render_template('visual.html',graph = graph, sentences=raw_sentences)
 
 
