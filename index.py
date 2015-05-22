@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup
 from nltk.corpus import stopwords
 
 from sklearn.feature_extraction.text import TfidfVectorizer
+import itertools
+import json
 
 from flask import Flask,request
 from flask import render_template
@@ -50,8 +52,23 @@ def visual():
 	raw_sentences = tokenizer.tokenize(document.decode('utf8').strip())
 	tfidf = TfidfVectorizer().fit_transform(raw_sentences)
 	matrix = (tfidf * tfidf.T).A
-	print matrix
-	return str(raw_sentences)
+	force = {}
+	force["nodes"] = []
+	force["links"] = [] 
+	for each in raw_sentences:
+	    temp={}
+	    temp["name"] = each
+	    force["nodes"].append(temp)
+	for ((i,_),(j,_)) in itertools.combinations(enumerate(raw_sentences), 2):
+	    temp = {}
+	    temp["source"] = i
+	    temp["target"] = j
+	    temp["value"] = matrix[i][j]
+	    force["links"].append(temp)
+	graph = json.dumps(force)
+	print type(graph)
+	print raw_sentences
+	return render_template('visual.html',graph = graph, sentences=raw_sentences)
 
 
 if __name__ == '__main__':
