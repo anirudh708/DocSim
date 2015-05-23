@@ -70,8 +70,16 @@ def visual():
 	wordlist = []
 	for each in raw_sentences:
 		wordlist+=document_to_wordlist(each)
-	print Counter(wordlist)
-	return render_template('visual.html',graph = graph, sentences=raw_sentences)
+	c = Counter(wordlist)
+	wordcloud = []
+	for each in c:
+	    temp = {}
+	    temp["text"] = each
+	    temp["size"] = c[each]*20
+	    wordcloud.append(temp)
+	wordcloud = json.dumps(wordcloud)
+	print wordcloud
+	return render_template('visual.html', graph=graph, sentences=raw_sentences, wordcloud=wordcloud)
 
 
 if __name__ == '__main__':

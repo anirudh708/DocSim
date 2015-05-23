@@ -1,11 +1,47 @@
 <!DOCTYPE html>
 <html>
+<head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<style>
+	h1 {
+      font-size: 64px;
+      font-weight: 300;
+      letter-spacing: -2px;
+      margin: .3em 0 .1em 0;
+    }
+    body {
+      font-family: "Helvetica Neue", Helvetica, sans-serif;
+      margin: 1em auto 4em auto;
+      position: relative;
+      tab-size: 2;
+      width: 960px;
+    }
+    .page-header {
+    	border-bottom:1px solid rgba(238, 238, 238, 0);
+	}
+	</style>
+</head>
 <body>
-
- <form action="/visual" method="post">
-    <textarea id="test" class="text" cols="86" rows ="20" name="document"></textarea>
-    <input type="submit" value="Email" class="submitButton">
-</form> 
-
+	<div class= "page-header">
+	  <h1>Document Similarity</h1>
+	</div>
+	<form>
+		<span>Algorithm </span>
+		<select>
+		  <option value="TF-IDF">TF-IDF</option>
+		  <option value="LSI">LSI</option>
+		  <option value="WORD NET">WORD NET</option>
+		  <option value="WORD2VEC">WORD2VEC</option>
+		</select>
+		<p></p>
+		<span>Level</span>
+		<select>
+		  <option value="Sentence">Sentence</option>
+		  <option value="Document">Document</option>
+		</select>
+		<p></p>
+		<span>Number of Docs</span>
+		<input type="number" name="quantity" min="1">
+	</form>
 </body>
 </html>

@@ -1,0 +1,6 @@
+TODO:
+	-> Create a Home page.(Saturday)
+	-> Handle input server side.(Saturday)
+	-> Implement on click functionality for links(Saturday)
+	-> Deal With algorithms.(Sunday)
+	-> Refine.(Sunday)

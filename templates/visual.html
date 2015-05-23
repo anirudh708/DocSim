@@ -2,11 +2,12 @@
 <meta charset="utf-8">
 <head>
   <title> Visual </title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
   <style>
 
     .node {
       stroke: #fff;
-      stroke-width: 1.5px;
+      stroke-width: 1.5px; 
     }
 
     .link {
@@ -27,6 +28,12 @@
       letter-spacing: -2px;
       margin: .3em 0 .1em 0;
     }
+    h2{
+      font-size: 32px;
+      font-weight: 300;
+      letter-spacing: -2px;
+      margin: .3em 0 .1em 0;
+    }
 
 </style>
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -34,14 +41,21 @@
 </head>
 
 <body>
-<h1>Graph representation</h1>
-<p>Node represents sentence or Doc. Link width represents similarty</p>
-<div class="fcl" style="border: thin solid black"></div>
-<p></p>
-<p>similarity threshold(min 0 max 1 step size of 0.1)</p>
-<input style="width:300px"id="slide" type="range" class="slider" min="0" max="1" step="0.1" onchange="threshold(this.value)">
-<div class="wordcloud">
-</div>
+  <h1>Graph representation</h1>
+  <p>Node represents sentence or Doc. Link width represents similarty</p>
+  <div class="fcl" style="border: thin solid black"></div>
+  <p></p>
+  <p>similarity threshold(min 0 max 1 step size of 0.1)</p>
+  <input style="width:300px"id="slide" type="range" class="slider" min="0" max="1" step="0.1" onchange="threshold(this.value)">
+  <div class="row other_visual" style="padding-top:30px">
+      <div class="col-md-6" >
+          <h2>Word Cloud</h2>
+          <div class="wordcloud" >
+          </div>
+      </div>
+      <div class="col-md-6"style="border: thin solid black">
+      </div>
+  </div>
 
 <script>
 var graph = {{graph|safe}}
@@ -152,13 +166,14 @@ function restart() {
 //end threshold.
 
 var fill = d3.scale.category20();
+var words = [
+        "Hello", "world", "normally", "you", "want", "more", "words",
+        "than", "this"]
+
+var obj = {{wordcloud|safe}}
 
   d3.layout.cloud().size([300, 300])
-      .words([
-        "Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this"].map(function(d) {
-        return {text: d, size: 10 + Math.random() * 90};
-      }))
+      .words(obj)
       .padding(5)
       .rotate(function() { return ~~(Math.random() * 2) * 90; })
       .font("Impact")
@@ -168,8 +183,8 @@ var fill = d3.scale.category20();
 
   function draw(words) {
     d3.select(".wordcloud").append("svg")
-        .attr("width", 300)
-        .attr("height", 300)
+        .attr("width", 450)
+        .attr("height", 450)
       .append("g")
         .attr("transform", "translate(150,150)")
       .selectAll("text")
@@ -186,3 +201,4 @@ var fill = d3.scale.category20();
   }
 
 </script>
+</body>
