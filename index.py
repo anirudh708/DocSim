@@ -17,6 +17,9 @@ from flask import render_template
 app = Flask(__name__)
 
 def document_to_wordlist( review, remove_stopwords=False ):
+	'''
+		Takes a string and converts it to wordlist(list)
+	'''
 	review_text = BeautifulSoup(review).get_text()
 	review_text = re.sub("[^a-zA-Z]"," ", review_text)
 	words = review_text.lower().split()
@@ -27,6 +30,9 @@ def document_to_wordlist( review, remove_stopwords=False ):
 
     
 def document_to_sentences( review, tokenizer, remove_stopwords=False ):
+	'''
+		Takes a document and inputs it to a list of lists.
+	'''
 	raw_sentences = tokenizer.tokenize(review.decode('utf8').strip())
 	sentences = []
 	for raw_sentence in raw_sentences:
@@ -49,10 +55,38 @@ def visual():
 		feed it to a templete for visulization
 	'''
 	tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-	document = request.form['document1']
-	raw_sentences = tokenizer.tokenize(document.decode('utf8').strip())
+
+	ALGORITHM = request.form['algorithm']
+	LEVEL = request.form['level']
+	DOC_COUNT = int(request.form['num-of-docs'])
+
+	DOCUMENTS = []
+	for i in range(DOC_COUNT):
+		DOCUMENTS.append(request.form['document'+str(i+1)])
+
+	raw_sentences = []
+
+	if LEVEL=="sentence":  
+		for each in DOCUMENTS:	# raw sentences will be each document splited into sentences
+			raw_sentences+=tokenizer.tokenize(each.decode('utf8').strip())
+	else:
+		raw_sentences = DOCUMENTS # raw sentence will be the whole do itself.
+
+	# Need to write functions for each. Wrote for TF-IDF.
 	tfidf = TfidfVectorizer().fit_transform(raw_sentences)
 	matrix = (tfidf * tfidf.T).A
+
+	# For each algo the Idea is to form a martix of similarities.
+	#---------
+		#Algo 2
+	#---------
+		#Algo 3
+	#---------
+		#Algo 4
+	#---------
+	#Forming nodes and links for graph.
+	#code might as well be same for all algos.
+	#Refine note : Think of creating private funcs and moving code.
 	force = {}
 	force["nodes"] = []
 	force["links"] = [] 
@@ -78,7 +112,6 @@ def visual():
 	    temp["size"] = c[each]*20
 	    wordcloud.append(temp)
 	wordcloud = json.dumps(wordcloud)
-	print wordcloud
 	return render_template('visual.html', graph=graph, sentences=raw_sentences, wordcloud=wordcloud)
 
 
