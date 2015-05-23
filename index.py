@@ -49,7 +49,7 @@ def visual():
 		feed it to a templete for visulization
 	'''
 	tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-	document = request.form['document']
+	document = request.form['document1']
 	raw_sentences = tokenizer.tokenize(document.decode('utf8').strip())
 	tfidf = TfidfVectorizer().fit_transform(raw_sentences)
 	matrix = (tfidf * tfidf.T).A

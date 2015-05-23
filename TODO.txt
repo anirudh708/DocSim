@@ -1,5 +1,5 @@
 TODO:
-	-> Create a Home page.(Saturday)
+	-> Create a Home page.(Saturday). -->Task is Done.[11.34]
 	-> Handle input server side.(Saturday)
 	-> Implement on click functionality for links(Saturday)
 	-> Deal With algorithms.(Sunday)
