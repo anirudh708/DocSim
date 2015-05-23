@@ -55,9 +55,9 @@
       </div>
       <div class="col-md-6"style="border: thin solid black">
         <p> Document 1</p>
-        <textarea rows="8" cols="60"></textarea>
+        <textarea rows="8" cols="60" id="firstDoc"></textarea>
         <p> Document 2</p>
-        <textarea rows="8" cols="60"></textarea>
+        <textarea rows="8" cols="60" id="secondDoc"></textarea>
         <p>The similarity value is <span id="result">1</span></p>
       </div>
   </div>
@@ -121,7 +121,12 @@ var link = svg.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    .style("stroke-width", function(d) { return d.value*10; });
+    .style("stroke-width", function(d) { return d.value*10; })
+    .on('click',function(d){
+      document.getElementById("firstDoc").value = d['source']['name'];
+      document.getElementById("secondDoc").value = d['target']['name'];
+      document.getElementById("result").innerHTML = d.value;
+    });
 
 var node = svg.selectAll(".node")
     .data(graph.nodes)

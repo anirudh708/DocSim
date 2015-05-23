@@ -94,6 +94,8 @@
 addTextarea(0);
 function addTextarea(value)
 {
+	// function shall not operate in this fashion anny text input will be lost when changed
+	// creating shall not create every element each time.
 	var a  = document.getElementById("ta");
 	var i=0;
 	a.innerHTML="";
