@@ -1,6 +1,6 @@
 TODO:
 	-> Create a Home page.(Saturday). -->Task is Done.[11.34]
 	-> Handle input server side.(Saturday)	--> Task Done[3.04]
-	-> Implement on click functionality for links(Saturday)
+	-> Implement on click functionality for links(Saturday) --> Task Done[8.31]
 	-> Deal With algorithms.(Sunday)
 	-> Refine and Refractor.(Sunday)
