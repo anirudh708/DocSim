@@ -1,4 +1,5 @@
 import re
+import os
 import nltk
 
 import pandas as pd
@@ -8,6 +9,8 @@ from bs4 import BeautifulSoup
 from nltk.corpus import stopwords
 
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 import itertools
 import json
 from collections import Counter
@@ -16,7 +19,8 @@ from flask import Flask,request
 from flask import render_template
 app = Flask(__name__)
 
-def document_to_wordlist( review, remove_stopwords=False ):
+
+def document_to_wordlist( review, remove_stopwords=True ):
 	'''
 		Takes a string and converts it to wordlist(list)
 	'''
@@ -40,6 +44,25 @@ def document_to_sentences( review, tokenizer, remove_stopwords=False ):
 	        sentences.append(document_to_wordlist( raw_sentence, \
 	          remove_stopwords ))
 	return sentences,raw_sentences
+
+def load_word2vec(dir):
+	word2vec = {}
+	for path in os.listdir(dir):
+		iword2vec = {}
+		#load the word2vec features.
+		with open(os.path.join(dir,path), 'r') as fin:
+			if path == 'vectors0.txt':
+				next(fin) #skip information on first line
+			for line in fin:
+				items = line.replace('\r','').replace('\n','').split(' ')
+				if len(items) < 10: continue
+				word = items[0]
+				vect = np.array([float(i) for i in items[1:] if len(i) > 1])
+				iword2vec[word] = vect
+		
+		word2vec.update(iword2vec)
+		
+	return word2vec
 
 @app.route('/')
 def home():
@@ -71,18 +94,42 @@ def visual():
 			raw_sentences+=tokenizer.tokenize(each.decode('utf8').strip())
 	else:
 		raw_sentences = DOCUMENTS # raw sentence will be the whole do itself.
-
+	matrix = []
+	if ALGORITHM=="TF-IDF":
 	# Need to write functions for each. Wrote for TF-IDF.
-	tfidf = TfidfVectorizer().fit_transform(raw_sentences)
-	matrix = (tfidf * tfidf.T).A
+		tfidf = TfidfVectorizer().fit_transform(raw_sentences)
+		matrix = (tfidf * tfidf.T).A
 
 	# For each algo the Idea is to form a martix of similarities.
 	#---------
 		#Algo 2
+
 	#---------
 		#Algo 3
 	#---------
 		#Algo 4
+		#Got pretrained vectors from GIT. TA repo has ugly code to generate the same.
+	if ALGORITHM=="WORD2VEC":
+		word_vector = load_word2vec('static\\vectors')
+		matrix = [[0]*len(raw_sentences)]*len(raw_sentences)
+		for i in range(0,len(raw_sentences)):
+			for j in range(0,len(raw_sentences)):
+				sen1 = raw_sentences[i]
+				sen2 = raw_sentences[j]
+				sen1_words = document_to_wordlist(sen1)
+				sen2_words = document_to_wordlist(sen2)
+				sen1_vectors = []
+				for each in sen1_words:
+					if each in word_vector:
+						sen1_vectors.append(word_vector[each])
+				sen1_vector = np.array(sen1_vectors).sum(axis=0)
+				sen2_vectors = []
+				for each in sen2_words:
+					if each in word_vector:
+						sen2_vectors.append(word_vector[each])
+				sen2_vector = np.array(sen2_vectors).sum(axis=0)
+				matrix[i][j] = cosine_similarity(sen1_vector, sen2_vector)[0][0]
+
 	#---------
 	#Forming nodes and links for graph.
 	#code might as well be same for all algos.
@@ -116,6 +163,7 @@ def visual():
 
 
 if __name__ == '__main__':
-	app.debug = True
 
+	app.debug = True
+	
 	app.run()
