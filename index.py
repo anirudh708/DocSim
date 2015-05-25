@@ -10,6 +10,7 @@ from nltk.corpus import stopwords
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from gensim import corpora, models, similarities
 
 import itertools
 import json
@@ -20,7 +21,7 @@ from flask import render_template
 app = Flask(__name__)
 
 
-def document_to_wordlist( review, remove_stopwords=True ):
+def document_to_wordlist( review, remove_stopwords=False ):
 	'''
 		Takes a string and converts it to wordlist(list)
 	'''
@@ -103,6 +104,32 @@ def visual():
 	# For each algo the Idea is to form a martix of similarities.
 	#---------
 		#Algo 2
+	
+	if ALGORITHM=="LSI":
+		texts = [] 
+		matrix = np.zeros(shape=(len(raw_sentences), len(raw_sentences)))
+		for each in raw_sentences:
+			texts.append(document_to_wordlist(each))
+		
+		dictionary = corpora.Dictionary(texts)
+		corpus = [dictionary.doc2bow(text) for text in texts]
+		lsii = models.LsiModel(corpus)
+		
+		matrix = np.zeros(shape=(len(raw_sentences), len(raw_sentences)))
+
+		for i in range(len(raw_sentences)):
+		    vec = corpus[i]
+		    doc = raw_sentences[i]
+		    
+		    vec_bow = dictionary.doc2bow(doc.lower().split())
+		    vec_lsi = lsii[vec_bow]  # convert the query to LSI space
+
+		    index = similarities.MatrixSimilarity(lsii[corpus])
+		    sims = index[vec_lsi]  # perform a similarity query against the corpus
+		    cosine = list(enumerate(sims))
+		    for j in range(len(raw_sentences)):
+		        matrix[i][j] = cosine[j][1]
+
 
 	#---------
 		#Algo 3
@@ -111,7 +138,12 @@ def visual():
 		#Got pretrained vectors from GIT. TA repo has ugly code to generate the same.
 	if ALGORITHM=="WORD2VEC":
 		word_vector = load_word2vec('static\\vectors')
-		matrix = [[0]*len(raw_sentences)]*len(raw_sentences)
+		matrix = []
+		for each in range(len(raw_sentences)):
+			li=[]
+			for each1 in range(len(raw_sentences)):
+				li.append(0)
+			matrix.append(li)
 		for i in range(0,len(raw_sentences)):
 			for j in range(0,len(raw_sentences)):
 				sen1 = raw_sentences[i]
