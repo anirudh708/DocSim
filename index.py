@@ -172,7 +172,9 @@ def visual():
 	for each in raw_sentences:
 	    temp={}
 	    temp["name"] = each
+	    temp["length"] = len(document_to_wordlist(each))
 	    force["nodes"].append(temp)
+
 	for ((i,_),(j,_)) in itertools.combinations(enumerate(raw_sentences), 2):
 	    temp = {}
 	    temp["source"] = i
