@@ -1,6 +1,8 @@
 import re
 import os
 import nltk
+from nltk.corpus import wordnet as wn
+from nltk.stem import PorterStemmer
 
 import pandas as pd
 import numpy as np
@@ -15,10 +17,215 @@ from gensim import corpora, models, similarities
 import itertools
 import json
 from collections import Counter
+from itertools import chain
+import math
+import numpy as np
 
 from flask import Flask,request
 from flask import render_template
 app = Flask(__name__)
+
+#-----------------------------------------------------------------------------
+
+# Age old code implementing some random algorithm in a IEEE paper. 
+# Shall refractor and write comments.
+
+def lesk(context_sentence, ambiguous_word, pos=None, stem=True, hyperhypo=True):
+    ps = PorterStemmer()
+    max_overlaps = 0; lesk_sense = None
+    context_sentence = context_sentence.split()
+    for ss in wn.synsets(ambiguous_word):
+        # If POS is specified.
+        if pos and ss.pos is not pos:
+            continue
+
+        lesk_dictionary = []
+
+        # Includes definition.
+        lesk_dictionary+= ss.definition().split()
+        # Includes lemma_names.
+        lesk_dictionary+= ss.lemma_names()
+
+        # Optional: includes lemma_names of hypernyms and hyponyms.
+        if hyperhypo == True:
+            lesk_dictionary+= list(chain(*[i.lemma_names() for i in ss.hypernyms()+ss.hyponyms()]))       
+
+        if stem == True: # Matching exact words causes sparsity, so lets match stems.
+            lesk_dictionary = [ps.stem(i) for i in lesk_dictionary]
+            context_sentence = [ps.stem(i) for i in context_sentence] 
+
+        overlaps = set(lesk_dictionary).intersection(context_sentence)
+
+        if len(overlaps) > max_overlaps:
+            lesk_sense = ss
+            max_overlaps = len(overlaps)
+    return lesk_sense
+
+
+def common(input1,input2):
+    commonlist=[]
+    for each in input1:
+        if each not in commonlist:
+            commonlist.append(each)
+    for each in input2:
+        if each not in commonlist:
+            commonlist.append(each)
+    return commonlist
+
+def common1(input1,input2):
+    commonword=[]
+    commonsim=[]
+    for each in input1:
+        if type(each)==str:
+            if each not in commonword:
+                commonword.append(each)
+        else:
+			print each,"   -------------------  ",type(each)
+			if each not in commonsim:
+			    commonsim.append(each)
+    for each in input2:
+        if type(each)==str:
+            if each not in commonword:
+                commonword.append(each)
+        else:
+			print each,"   -------------------  ",type(each)
+			if each not in commonsim:
+			    commonsim.append(each)
+    return commonword+commonsim
+
+
+def nps(sentence):
+    senses=[]
+    wordlist=sentence.split(" ")
+    for eachword in wordlist:
+        x=lesk(sentence,eachword)
+        if x is not None:
+            senses.append(x)
+        else:
+            senses.append(eachword);
+    return senses
+
+
+def similarity_score(input_array,word):
+    max_similarity=0
+    for each in input_array:
+        simili=word_similarity(each,word)
+        if simili>max_similarity:
+            max_similarity=simili
+    return max_similarity
+
+def length(word1,word2):
+    return word1.shortest_path_distance(word2,simulate_root=True)
+    
+
+def word_similarity(word1,word2):
+    leng=length(word1,word2)
+    need_root = word1._needs_root()
+    subsumers = word1.lowest_common_hypernyms(word2, simulate_root=True and need_root)
+    if word1==word2:
+        return 1
+    if len(subsumers)==0:
+        depth=word1.max_depth()
+    else:
+        subsumer = subsumers[0]
+        depth = subsumer.max_depth() + 1 
+    return math.exp(-0.2*leng)*((math.exp(0.45*depth)-math.exp(-0.45*depth))/(math.exp(0.45*depth)+math.exp(-0.45*depth)))
+
+def cosine_similarity(v1,v2):
+    sumxx, sumxy, sumyy = 0, 0, 0
+    for i in range(len(v1)):
+        x = v1[i]; y = v2[i]
+        sumxx += x*x
+        sumyy += y*y
+        sumxy += x*y
+    return sumxy/math.sqrt(sumxx*sumyy)
+    
+def lsv(common_nps,input_nps):
+    lsvector=[]
+    
+    input_nps_syn=[]
+    input_nps_word=[]
+    
+    for each in input_nps:
+        if type(each)==str:
+            input_nps_word.append(each)
+        else:
+            input_nps_syn.append(each)
+    
+    
+    for each in common_nps:
+        if type(each)==str:
+            if each in input_nps_word:
+                lsvector.append(1)
+            else:
+                lsvector.append(0)
+        else:
+            if each in input_nps_syn:
+                lsvector.append(1)
+            else:
+                lsvector.append(similarity_score(input_nps_syn,each))
+    return lsvector
+ 
+ 
+def word_order(common_nps,input_nps):
+    wovector=[]
+     
+    for each in common_nps:
+        maxi=0
+        i=1
+        j=1
+        for every in input_nps:
+            i+=1
+            sim=word_similarity(each,every)
+            print each,"  ",every,"  ",sim
+            if sim>maxi:
+                maxi=sim
+                j=i
+        wovector.append(j)
+    return wovector
+
+
+def word_order1(common_nps,input_nps):
+    wovector=[]
+     
+    for each in common_nps:
+        maxi=0
+        i=1
+        j=1
+        for every in input_nps:
+            if type(each)==str and type(every)==str:
+                i+=1
+                if each==every:
+                    maxi=1
+                    j=i       
+            elif type(each)!=str and type(every)!=str:
+                i+=1
+                sim=word_similarity(each,every)
+                print each,"  ",every,"  ",sim
+                if sim>maxi:
+                    maxi=sim
+                    j=i
+            wovector.append(j)
+    return wovector
+
+
+
+                    
+def word_order_simili(sum_array,sub_array):
+    sumsub,sumsum=0,0
+    for each in range(len(sum_array)):
+        sumsum+=sum_array[each]*sum_array[each]
+    den=math.sqrt(sumsum)
+    for each in range(len(sub_array)):
+        sumsub+=sub_array[each]*sub_array[each]
+    num=math.sqrt(sumsub)   
+    return num/den
+
+
+
+
+
+#-------------------------------------------------------------------------------
 
 
 def document_to_wordlist( review, remove_stopwords=False ):
@@ -47,6 +254,10 @@ def document_to_sentences( review, tokenizer, remove_stopwords=False ):
 	return sentences,raw_sentences
 
 def load_word2vec(dir):
+	'''
+		reads word vector files and returns a dictionary of 
+		word and assosiated vector as key value pair
+	'''
 	word2vec = {}
 	for path in os.listdir(dir):
 		iword2vec = {}
@@ -105,7 +316,8 @@ def visual():
 	#---------
 		#Algo 2
 	
-	if ALGORITHM=="LSI":
+	if ALGORITHM=="LSI": 
+		#added by sneha git:snehapvs .
 		texts = [] 
 		matrix = np.zeros(shape=(len(raw_sentences), len(raw_sentences)))
 		for each in raw_sentences:
@@ -133,6 +345,29 @@ def visual():
 
 	#---------
 		#Algo 3
+	if ALGORITHM == "WORDNET":
+		print "here---------------------------"
+		matrix = []
+		for each in range(len(raw_sentences)):
+			li= []
+			for each1 in range(len(raw_sentences)):
+				li.append(0)
+			matrix.append(li)
+		for i in range(0,len(raw_sentences)):
+			for j in range(0,len(raw_sentences)):
+				input1=raw_sentences[i].encode('charset')
+				input2=raw_sentences[j].encode('charset')
+				print "1"
+				input1_nps=nps(input1)
+				print "2"
+				input2_nps=nps(input2)
+				print "3"
+				common_nps=common1(input1_nps,input2_nps)
+				print "4"
+				lsv_input1=lsv(common_nps,input1_nps)
+				print "5"
+				lsv_input2=lsv(common_nps,input2_nps)
+				matrix[i][j] =cosine_similarity(lsv_input1,lsv_input2)
 	#---------
 		#Algo 4
 		#Got pretrained vectors from GIT. TA repo has ugly code to generate the same.
@@ -172,9 +407,7 @@ def visual():
 	for each in raw_sentences:
 	    temp={}
 	    temp["name"] = each
-	    temp["length"] = len(document_to_wordlist(each))
 	    force["nodes"].append(temp)
-
 	for ((i,_),(j,_)) in itertools.combinations(enumerate(raw_sentences), 2):
 	    temp = {}
 	    temp["source"] = i
