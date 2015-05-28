@@ -44,6 +44,7 @@ def lesk(context_sentence, ambiguous_word, pos=None, stem=True, hyperhypo=True):
         # Includes definition.
         lesk_dictionary+= ss.definition().split()
         # Includes lemma_names.
+
         lesk_dictionary+= ss.lemma_names()
 
         # Optional: includes lemma_names of hypernyms and hyponyms.
@@ -80,17 +81,15 @@ def common1(input1,input2):
             if each not in commonword:
                 commonword.append(each)
         else:
-			print each,"   -------------------  ",type(each)
-			if each not in commonsim:
-			    commonsim.append(each)
+            if each not in commonsim:
+                commonsim.append(each)
     for each in input2:
         if type(each)==str:
             if each not in commonword:
                 commonword.append(each)
         else:
-			print each,"   -------------------  ",type(each)
-			if each not in commonsim:
-			    commonsim.append(each)
+            if each not in commonsim:
+                commonsim.append(each)
     return commonword+commonsim
 
 
@@ -355,17 +354,13 @@ def visual():
 			matrix.append(li)
 		for i in range(0,len(raw_sentences)):
 			for j in range(0,len(raw_sentences)):
-				input1=raw_sentences[i].encode('charset')
-				input2=raw_sentences[j].encode('charset')
-				print "1"
+				input1=raw_sentences[i].encode('ascii','ignore')
+				input2=raw_sentences[j].encode('ascii','ignore')
+
 				input1_nps=nps(input1)
-				print "2"
 				input2_nps=nps(input2)
-				print "3"
 				common_nps=common1(input1_nps,input2_nps)
-				print "4"
 				lsv_input1=lsv(common_nps,input1_nps)
-				print "5"
 				lsv_input2=lsv(common_nps,input2_nps)
 				matrix[i][j] =cosine_similarity(lsv_input1,lsv_input2)
 	#---------
@@ -407,6 +402,7 @@ def visual():
 	for each in raw_sentences:
 	    temp={}
 	    temp["name"] = each
+	    temp["length"] = len(document_to_wordlist(each))
 	    force["nodes"].append(temp)
 	for ((i,_),(j,_)) in itertools.combinations(enumerate(raw_sentences), 2):
 	    temp = {}
