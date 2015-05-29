@@ -313,7 +313,7 @@ def visual():
 
 	# For each algo the Idea is to form a martix of similarities.
 	#---------
-		#Algo 2
+		#Algo 2:Latent Semantic Indexing
 	
 	if ALGORITHM=="LSI": 
 		#added by sneha git:snehapvs .
